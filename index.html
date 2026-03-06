@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Do Rzeczy · Tom 3 · Komendy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy:       #0E1C36;
+      --navy-card:  #162035;
+      --navy-inner: #0A1526;
+      --blue:       #2563EB;
+      --blue-light: #3B82F6;
+      --glow:       #818CF8;
+      --orange:     #F97316;
+      --orange-dim: #C2570A;
+      --white:      #F1F5F9;
+      --muted:      #94A3B8;
+      --border:     #1E3050;
+      --green:      #22C55E;
+      --green-dim:  #15803D;
+      --red:        #EF4444;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--navy);
+      color: var(--white);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.6;
+    }
+
+    /* ── EKRAN LOGOWANIA ── */
+    #ekran-logowania {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: var(--navy);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .login-box {
+      background: var(--navy-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 48px 40px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      position: relative;
+    }
+
+    .login-box::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 160px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--orange), transparent);
+    }
+
+    .login-badge {
+      display: inline-block;
+      background: rgba(249,115,22,0.1);
+      color: var(--orange);
+      font-weight: 600;
+      font-size: 0.72rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(249,115,22,0.3);
+      margin-bottom: 20px;
+    }
+
+    .login-box h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #fff 30%, var(--glow) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .login-box p {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+
+    .login-box p strong {
+      color: var(--white);
+    }
+
+    .kod-input {
+      width: 100%;
+      background: var(--navy-inner);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 1.1rem;
+      font-family: 'Outfit', monospace;
+      font-weight: 700;
+      color: var(--white);
+      text-align: center;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+
+    .kod-input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.2);
+    }
+
+    .kod-input.error {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(239,68,68,0.2);
+      animation: shake 0.4s ease;
+    }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25%      { transform: translateX(-8px); }
+      75%      { transform: translateX(8px); }
+    }
+
+    .btn-odblokuj {
+      width: 100%;
+      background: var(--blue);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+      margin-bottom: 16px;
+    }
+
+    .btn-odblokuj:hover {
+      background: var(--blue-light);
+      box-shadow: 0 0 20px rgba(37,99,235,0.4);
+    }
+
+    .btn-odblokuj:active { transform: scale(0.98); }
+
+    .error-msg {
+      font-size: 0.85rem;
+      color: var(--red);
+      min-height: 20px;
+      margin-bottom: 8px;
+    }
+
+    .login-hint {
+      font-size: 0.78rem;
+      color: #475569;
+      margin-top: 16px;
+    }
+
+    /* ── GŁÓWNA TREŚĆ (ukryta domyślnie) ── */
+    #tresc {
+      display: none;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: relative;
+      text-align: center;
+      padding: 56px 24px 44px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    header::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--blue), transparent);
+    }
+
+    .header-glow {
+      position: absolute;
+      top: -60px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 500px;
+      height: 200px;
+      background: radial-gradient(ellipse, rgba(37,99,235,0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .tom-badge {
+      display: inline-block;
+      background: var(--orange-dim);
+      color: var(--orange);
+      font-weight: 600;
+      font-size: 0.72rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--orange-dim);
+      margin-bottom: 18px;
+    }
+
+    header h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(2rem, 5vw, 2.9rem);
+      font-weight: 800;
+      line-height: 1.5;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #fff 30%, var(--glow) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    header .subtitle {
+      font-size: 1.3rem;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    .header-tip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(37,99,235,0.12);
+      border: 1px solid rgba(37,99,235,0.3);
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 0.85rem;
+      color: #93C5FD;
+      max-width: 520px;
+    }
+
+    /* ── NAW ── */
+    .chapter-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(14,28,54,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .chapter-nav::-webkit-scrollbar { display: none; }
+
+    .nav-item {
+      flex-shrink: 0;
+      padding: 14px 16px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .nav-item:hover { color: var(--white); }
+    .nav-item.active { color: var(--orange); border-bottom-color: var(--orange); }
+
+    /* ── MAIN ── */
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 20px 60px;
+    }
+
+    .chapter { padding-top: 48px; }
+
+    .chapter-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+      padding-top: 12px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .chapter-info h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 3px;
+    }
+
+    .chapter-info p { font-size: 0.82rem; color: var(--muted); }
+
+    .komenda-card {
+      background: var(--navy-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 14px;
+      overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .komenda-card:hover {
+      border-color: rgba(37,99,235,0.4);
+      box-shadow: 0 4px 24px rgba(37,99,235,0.08);
+    }
+
+    .komenda-head {
+      display: flex;
+      align-items: center;
+      padding: 14px 18px 10px;
+      gap: 12px;
+    }
+
+    .komenda-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .komenda-num {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--orange);
+      background: rgba(249,115,22,0.1);
+      border: 1px solid rgba(249,115,22,0.2);
+      border-radius: 5px;
+      padding: 2px 8px;
+      flex-shrink: 0;
+      letter-spacing: 0.05em;
+    }
+
+    .komenda-title {
+      font-size: 0.93rem;
+      font-weight: 600;
+      color: var(--white);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .komenda-body { padding: 0 18px 16px; }
+
+    .komenda-tekst {
+      background: var(--navy-inner);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 0.875rem;
+      line-height: 1.7;
+      color: #CBD5E1;
+      white-space: pre-wrap;
+      margin-bottom: 12px;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .komenda-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-kopiuj {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--blue);
+      color: white;
+      border: none;
+      border-radius: 7px;
+      padding: 8px 18px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .btn-kopiuj:hover { background: var(--blue-light); box-shadow: 0 0 16px rgba(37,99,235,0.4); }
+    .btn-kopiuj:active { transform: scale(0.96); }
+    .btn-kopiuj.success { background: var(--green-dim); }
+    .btn-kopiuj.error   { background: #991B1B; }
+
+    .copy-hint { font-size: 0.78rem; color: var(--muted); }
+
+    .progress-bar {
+      background: rgba(37,99,235,0.1);
+      border: 1px solid rgba(37,99,235,0.2);
+      border-radius: 6px;
+      padding: 12px 18px;
+      margin-bottom: 32px;
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .progress-track {
+      flex: 1;
+      height: 5px;
+      background: var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--blue), var(--glow));
+      border-radius: 999px;
+      transition: width 0.4s ease;
+    }
+
+    .progress-label { font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
+    .progress-count { font-size: 0.78rem; color: #93C5FD; font-weight: 600; white-space: nowrap; }
+
+    footer {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 32px 20px;
+      text-align: center;
+    }
+
+    .footer-tomy {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .footer-tom-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .footer-tom-link.current {
+      background: rgba(249,115,22,0.15);
+      border: 1px solid rgba(249,115,22,0.3);
+      color: var(--orange);
+      cursor: default;
+    }
+
+    .footer-tom-link.coming {
+      background: var(--navy-card);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .footer-tom-link.coming:hover { border-color: rgba(37,99,235,0.3); color: #93C5FD; }
+    .footer-copy { font-size: 0.78rem; color: #475569; }
+
+    @media (max-width: 540px) {
+      header { padding: 40px 16px 32px; }
+      .login-box { padding: 36px 24px; }
+      .btn-kopiuj { width: 100%; justify-content: center; }
+      .komenda-actions { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ EKRAN LOGOWANIA ════════════════════════════════════════════════════ -->
+<div id="ekran-logowania">
+  <div class="login-box">
+    <div class="login-badge">Tom 3· AI Do Rzeczy</div>
+    <h1>Kod dostępu</h1>
+    <p>Wpisz kod z ostatniej strony e-booka<br><strong>AI Do Rzeczy — Tom 3</strong></p>
+    <input
+      type="text"
+      id="kod-input"
+      class="kod-input"
+      placeholder="TOM3-XXXX"
+      maxlength="9"
+      autocomplete="off"
+      spellcheck="false"
+    >
+    <div class="error-msg" id="error-msg"></div>
+    <button class="btn-odblokuj" onclick="sprawdzKod()">🔓 Odblokuj komendy</button>
+    <p class="login-hint">Kod znajdziesz na ostatniej stronie e-booka</p>
+  </div>
+</div>
+
+<!-- ══ GŁÓWNA TREŚĆ ═══════════════════════════════════════════════════════ -->
+<div id="tresc">
+
+<header>
+  <div class="header-glow"></div>
+  <div class="tom-badge">Tom 3 · AI Do Rzeczy</div>
+  <h1>← Wpisz tytuł Tomu 2 →</h1>
+  <p class="subtitle">Leszek Ignatowicz · aidorzeczy.com</p>
+  <div class="header-tip">
+    <span>💡</span>
+    Kliknij <strong>Kopiuj komendę</strong>, a następnie wklej ją w ChatGPT lub Claude
+  </div>
+</header>
+
+<nav class="chapter-nav" id="chapNav">
+  <a class="nav-item active" href="#r1" onclick="setActive(this)">← Rozdział 1 →</a>
+  <a class="nav-item" href="#r2" onclick="setActive(this)">← Rozdział 2 →</a>
+  <a class="nav-item" href="#r3" onclick="setActive(this)">← Rozdział 3 →</a>
+  <a class="nav-item" href="#r4" onclick="setActive(this)">← Rozdział 4 →</a>
+</nav>
+
+<main>
+  <div class="progress-bar">
+    <span class="progress-label">Skopiowane komendy:</span>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <span class="progress-count" id="progressCount">0 / 24</span>
+  </div>
+
+  <!-- ROZDZIAŁ 1 -->
+  <section class="chapter" id="r1">
+    <div class="chapter-header">
+      <div class="chapter-info">
+        <h2>← Wpisz nazwę Rozdziału 1 →</h2>
+        <p>Komendy 1–6</p>
+      </div>
+    </div>
+    <div class="komenda-card"><div class="komenda-head"><div class="komenda-label"><span class="komenda-num">K·01</span><span class="komenda-title">← Wpisz nazwę komendy 1 →</span></div></div><div class="komenda-body"><div class="komenda-tekst" id="k01">← Wklej tutaj treść komendy 1. →</div><div class="komenda-actions"><button class="btn-kopiuj" onclick="kopiuj('k01', this)">📋 Kopiuj komendę</button><span class="copy-hint">Ctrl+V lub długie przyciśnięcie → Wklej</span></div></div></div>
+    <div class="komenda-card"><div class="komenda-head"><div class="komenda-label"><span class="komenda-num">K·02</span><span class="komenda-title">← Wpisz nazwę komendy 2 →</span></div></div><div class="komenda-body"><div class="komenda-tekst" id="k02">← Wklej tutaj treść komendy 2. →</div><div class="komenda-actions"><button class="btn-kopiuj" onclick="kopiuj('k02', this)">📋 Kopiuj komendę</button><span class="copy-hint">Ctrl+V lub długie przyciśnięcie → Wklej</span></div></div></div>
+    <div class="komenda-card"><div class="komenda-head"><div class="komenda-label"><span class="komenda-num">K·03</span><span class="komenda-title">← Wpisz nazwę komendy 3 →</span></div></div><div class="komenda-body"><div class="komenda-tekst" id="k03">← Wklej tutaj treść komendy 3. →</div><div class="komenda-actions"><button class="btn-kopiuj" onclick="kopiuj('k03', this)">📋 Kopiuj komendę</button><span class="copy-hint">Ctrl+V lub długie przyciśnięcie → Wklej</span></div></div></div>
+    <div class="komenda-card"><div class="komenda-head"><div class="komenda-label"><span class="komenda-num">K·04</span><span class="komenda-title">← Wpisz nazwę komendy 4 →</span></div></div><div class="komenda-body"><div class="komenda-tekst" id="k04">← Wklej tutaj treść komendy 4. →</div><div class="komenda-actions"><button class="btn-kopiuj" onclick="kopiuj('k04', this)">📋 Kopiuj komendę</button><span class="copy-hint">Ctrl+V lub długie przyciśnięcie → Wklej</span></div></div></div>
+    <div class="komenda-card"><div class="komenda-head"><div class="komenda-label"><span class="komenda-num">K·05</span><span class="komenda-title">← Wpisz nazwę komendy 5 →</span></div></div><div class="komenda-body"><div class="komenda-tekst" id="k05">← Wklej tutaj treść komendy 5. →</div><div class="komenda-actions"><button class="btn-kopiuj" onclick="kopiuj('k05', this)">📋 Kopiuj komendę</button><span class="copy-hint">Ctrl+V lub długie przyciśnięcie → Wklej</span></div></div></div>
+    <div class="komenda-card"><div class="komenda-head"><div class="komenda-label"><span class="komenda-num">K·06</span><span class="komenda-title">← Wpisz nazwę komendy 6 →</span></div></div><div class="komenda-body"><div class="komenda-tekst" id="k06">← Wklej tutaj treść komendy 6. →</div><div class="komenda-actions"><button class="btn-kopiuj" onclick="kopiuj('k06', this)">📋 Kopiuj komendę</button><span class="copy-hint">Ctrl+V lub długie przyciśnięcie → Wklej</span></div></div></div>
+  </section>
+
+  <!-- ROZDZIAŁ 2 -->
+  <section class="chapter" id="r2">
+    <div class="chapter-header"><div class="chapter-info"><h2>← Wpisz nazwę Rozdziału 2 →</h2><p>Komendy 7–12</p></div></div>
+    <div class="komenda-card"><div class="komenda-head"><div class="komenda-label"><span class="komenda-num">K·07</span><span class="komenda-title">← Wpisz nazwę komendy 7 →</span></div></div><div class="komenda-body"><div class="komenda-tekst" id="k07">← Wklej tutaj treść komendy 7. →</div><div class="komenda-actions"><button class="btn-kopiuj" onclick="kopiuj('k07', this)">📋 Kopiuj komendę</button><span class="copy-hint">Ctrl+V lub długie przyciśnięcie → Wklej</span></div></div></div>
+    <div class="komenda-card"><div class="komenda-head"><div class="komenda-label"><span class="komenda-num">K·08</span><span class="komenda-title">← Wpisz nazwę komendy 8 →</span></div></div><div class="komenda-body"><div class="komenda-tekst" id="k08">← Wklej tutaj treść komendy 8. →</div><div class="komenda-actions"><button class="btn-kopiuj" onclick="kopiuj('k08', this)">📋 Kopiuj komendę</button><span class="copy-hint">Ctrl+V lub długie przyciśnięcie → Wklej</span></div></div></div>
+    <div class="komenda-card"><div class="komenda-head"><div class="komenda-label"><span class="komenda-num">K·09</span><span class="komenda-title">← Wpisz nazwę komendy 9 →</span></div></div><div class="komenda-body"><div class="komenda-tekst" id="k09">← Wklej tutaj treść komendy 9. →</div><div class="komenda-actions"><button class="btn-kopiuj" onclick="kopiuj('k09', this)">📋 Kopiuj komendę</button><span class="copy-hint">Ctrl+V lub długie przyciśnięcie → Wklej</span></div></div></div>
+    <div class="komenda-card"><div class="komenda-head"><div class="komenda-label"><span class="komenda-num">K·10</span><span class="komenda-title">← Wpisz nazwę komendy 10 →</span></div></div><div class="komenda-body"><div class="komenda-tekst" id="k10">← Wklej tutaj treść komendy 10. →</div><div class="komenda-actions"><button class="btn-kopiuj" onclick="kopiuj('k10', this)">📋 Kopiuj komendę</button><span class="copy-hint">Ctrl+V lub długie przyciśnięcie → Wklej</span></div></div></div>
+    <div class="komenda-card"><div class="komenda-head"><div class="komenda-label"><span class="komenda-num">K·11</span><span class="komenda-title">← Wpisz nazwę komendy 11 →</span></div></div><div class="komenda-body"><div class="komenda-tekst" id="k11">← Wklej tutaj treść komendy 11. →</div><div class="komenda-actions"><button class="btn-kopiuj" onclick="kopiuj('k11', this)">📋 Kopiuj komendę</button><span class="copy-hint">Ctrl+V lub długie przyciśnięcie → Wklej</span></div></div></div>
+    <div class="komenda-card"><div class="komenda-head"><div class="komenda-label"><span class="komenda-num">K·12</span><span class="komenda-title">← Wpisz nazwę komendy 12 →</span></div></div><div class="komenda-body"><div class="komenda-tekst" id="k12">← Wklej tutaj treść komendy 12. →</div><div class="komenda-actions"><button class="btn-kopiuj" onclick="kopiuj('k12', this)">📋 Kopiuj komendę</button><span class="copy-hint">Ctrl+V lub długie przyciśnięcie → Wklej</span></div></div></div>
+  </section>
+
+  <!-- ROZDZIAŁ 3 -->
+  <section class="chapter" id="r3">
+    <div class="chapter-header"><div class="chapter-info"><h2>← Wpisz nazwę Rozdziału 3 →</h2><p>Komendy 13–18</p></div></div>
+    <div class="komenda-card"><div class="komenda-head"><div class="komenda-label"><span class="komenda-num">K·13</span><span class="komenda-title">← Wpisz nazwę komendy 13 →</span></div></div><div class="komenda-body"><div class="komenda-tekst" id="k13">← Wklej tutaj treść komendy 13. →</div><div class="komenda-actions"><button class="btn-kopiuj" onclick="kopiuj('k13', this)">📋 Kopiuj komendę</button><span class="copy-hint">Ctrl+V lub długie przyciśnięcie → Wklej</span></div></div></div>
+    <div class="komenda-card"><div class="komenda-head"><div class="komenda-label"><span class="komenda-num">K·14</span><span class="komenda-title">← Wpisz nazwę komendy 14 →</span></div></div><div class="komenda-body"><div class="komenda-tekst" id="k14">← Wklej tutaj treść komendy 14. →</div><div class="komenda-actions"><button class="btn-kopiuj" onclick="kopiuj('k14', this)">📋 Kopiuj komendę</button><span class="copy-hint">Ctrl+V lub długie przyciśnięcie → Wklej</span></div></div></div>
+    <div class="komenda-card"><div class="komenda-head"><div class="komenda-label"><span class="komenda-num">K·15</span><span class="komenda-title">← Wpisz nazwę komendy 15 →</span></div></div><div class="komenda-body"><div class="komenda-tekst" id="k15">← Wklej tutaj treść komendy 15. →</div><div class="komenda-actions"><button class="btn-kopiuj" onclick="kopiuj('k15', this)">📋 Kopiuj komendę</button><span class="copy-hint">Ctrl+V lub długie przyciśnięcie → Wklej</span></div></div></div>
+    <div class="komenda-card"><div class="komenda-head"><div class="komenda-label"><span class="komenda-num">K·16</span><span class="komenda-title">← Wpisz nazwę komendy 16 →</span></div></div><div class="komenda-body"><div class="komenda-tekst" id="k16">← Wklej tutaj treść komendy 16. →</div><div class="komenda-actions"><button class="btn-kopiuj" onclick="kopiuj('k16', this)">📋 Kopiuj komendę</button><span class="copy-hint">Ctrl+V lub długie przyciśnięcie → Wklej</span></div></div></div>
+    <div class="komenda-card"><div class="komenda-head"><div class="komenda-label"><span class="komenda-num">K·17</span><span class="komenda-title">← Wpisz nazwę komendy 17 →</span></div></div><div class="komenda-body"><div class="komenda-tekst" id="k17">← Wklej tutaj treść komendy 17. →</div><div class="komenda-actions"><button class="btn-kopiuj" onclick="kopiuj('k17', this)">📋 Kopiuj komendę</button><span class="copy-hint">Ctrl+V lub długie przyciśnięcie → Wklej</span></div></div></div>
+    <div class="komenda-card"><div class="komenda-head"><div class="komenda-label"><span class="komenda-num">K·18</span><span class="komenda-title">← Wpisz nazwę komendy 18 →</span></div></div><div class="komenda-body"><div class="komenda-tekst" id="k18">← Wklej tutaj treść komendy 18. →</div><div class="komenda-actions"><button class="btn-kopiuj" onclick="kopiuj('k18', this)">📋 Kopiuj komendę</button><span class="copy-hint">Ctrl+V lub długie przyciśnięcie → Wklej</span></div></div></div>
+  </section>
+
+  <!-- ROZDZIAŁ 4 -->
+  <section class="chapter" id="r4">
+    <div class="chapter-header"><div class="chapter-info"><h2>← Wpisz nazwę Rozdziału 4 →</h2><p>Komendy 19–24</p></div></div>
+    <div class="komenda-card"><div class="komenda-head"><div class="komenda-label"><span class="komenda-num">K·19</span><span class="komenda-title">← Wpisz nazwę komendy 19 →</span></div></div><div class="komenda-body"><div class="komenda-tekst" id="k19">← Wklej tutaj treść komendy 19. →</div><div class="komenda-actions"><button class="btn-kopiuj" onclick="kopiuj('k19', this)">📋 Kopiuj komendę</button><span class="copy-hint">Ctrl+V lub długie przyciśnięcie → Wklej</span></div></div></div>
+    <div class="komenda-card"><div class="komenda-head"><div class="komenda-label"><span class="komenda-num">K·20</span><span class="komenda-title">← Wpisz nazwę komendy 20 →</span></div></div><div class="komenda-body"><div class="komenda-tekst" id="k20">← Wklej tutaj treść komendy 20. →</div><div class="komenda-actions"><button class="btn-kopiuj" onclick="kopiuj('k20', this)">📋 Kopiuj komendę</button><span class="copy-hint">Ctrl+V lub długie przyciśnięcie → Wklej</span></div></div></div>
+    <div class="komenda-card"><div class="komenda-head"><div class="komenda-label"><span class="komenda-num">K·21</span><span class="komenda-title">← Wpisz nazwę komendy 21 →</span></div></div><div class="komenda-body"><div class="komenda-tekst" id="k21">← Wklej tutaj treść komendy 21. →</div><div class="komenda-actions"><button class="btn-kopiuj" onclick="kopiuj('k21', this)">📋 Kopiuj komendę</button><span class="copy-hint">Ctrl+V lub długie przyciśnięcie → Wklej</span></div></div></div>
+    <div class="komenda-card"><div class="komenda-head"><div class="komenda-label"><span class="komenda-num">K·22</span><span class="komenda-title">← Wpisz nazwę komendy 22 →</span></div></div><div class="komenda-body"><div class="komenda-tekst" id="k22">← Wklej tutaj treść komendy 22. →</div><div class="komenda-actions"><button class="btn-kopiuj" onclick="kopiuj('k22', this)">📋 Kopiuj komendę</button><span class="copy-hint">Ctrl+V lub długie przyciśnięcie → Wklej</span></div></div></div>
+    <div class="komenda-card"><div class="komenda-head"><div class="komenda-label"><span class="komenda-num">K·23</span><span class="komenda-title">← Wpisz nazwę komendy 23 →</span></div></div><div class="komenda-body"><div class="komenda-tekst" id="k23">← Wklej tutaj treść komendy 23. →</div><div class="komenda-actions"><button class="btn-kopiuj" onclick="kopiuj('k23', this)">📋 Kopiuj komendę</button><span class="copy-hint">Ctrl+V lub długie przyciśnięcie → Wklej</span></div></div></div>
+    <div class="komenda-card"><div class="komenda-head"><div class="komenda-label"><span class="komenda-num">K·24</span><span class="komenda-title">← Wpisz nazwę komendy 24 →</span></div></div><div class="komenda-body"><div class="komenda-tekst" id="k24">← Wklej tutaj treść komendy 24. →</div><div class="komenda-actions"><button class="btn-kopiuj" onclick="kopiuj('k24', this)">📋 Kopiuj komendę</button><span class="copy-hint">Ctrl+V lub długie przyciśnięcie → Wklej</span></div></div></div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="footer-tomy">
+    <a class="footer-tom-link coming" href="https://tom1.aidorzeczy.com">Tom 1</a>
+    <a class="footer-tom-link current" href="#">★ Tom 3 — tu jesteś</a>
+    <a class="footer-tom-link coming" href="https://tom3.aidorzeczy.com">Tom 3 — dostępny wkrótce</a>
+  </div>
+  <p class="footer-copy">AI Do Rzeczy · Leszek Ignatowicz · aidorzeczy.com</p>
+</footer>
+
+</div><!-- koniec #tresc -->
+
+<script>
+  // ═══════════════════════════════════════════════════════
+  // ZMIEŃ TEN KOD NA WŁAŚCIWY PRZED PUBLIKACJĄ
+  // Wpisz go też na ostatniej stronie e-booka Tom 3
+  // ═══════════════════════════════════════════════════════
+  const POPRAWNY_KOD = 'TOM3-SX9Y';
+
+  const KLUCZ_SESJI = 'dostep_tom3';
+
+  function sprawdzKod() {
+    const input = document.getElementById('kod-input');
+    const errorMsg = document.getElementById('error-msg');
+    const wpisany = input.value.trim().toUpperCase();
+
+    if (wpisany === POPRAWNY_KOD) {
+      // Zapisz w sessionStorage — dostęp trwa do zamknięcia karty
+      sessionStorage.setItem(KLUCZ_SESJI, '1');
+      odblokuj();
+    } else {
+      input.classList.add('error');
+      errorMsg.textContent = 'Nieprawidłowy kod. Sprawdź ostatnią stronę e-booka.';
+      setTimeout(() => input.classList.remove('error'), 600);
+    }
+  }
+
+  function odblokuj() {
+    document.getElementById('ekran-logowania').style.display = 'none';
+    document.getElementById('tresc').style.display = 'block';
+  }
+
+  // Sprawdź czy już odblokowane w tej sesji
+  if (sessionStorage.getItem(KLUCZ_SESJI) === '1') {
+    odblokuj();
+  }
+
+  // Enter w polu kodu
+  document.getElementById('kod-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') sprawdzKod();
+  });
+
+  // ── Kopiowanie ──────────────────────────────────────────
+  const TOTAL = 24;
+  const copied = new Set();
+
+  function updateProgress() {
+    const n = copied.size;
+    document.getElementById('progressCount').textContent = n + ' / ' + TOTAL;
+    document.getElementById('progressFill').style.width = (n / TOTAL * 100) + '%';
+  }
+
+  function kopiuj(id, btn) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const tekst = el.innerText;
+    const resetBtn = () => { btn.textContent = '📋 Kopiuj komendę'; btn.classList.remove('success','error'); };
+
+    if (!navigator.clipboard) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = tekst; ta.style.position='fixed'; ta.style.opacity='0';
+        document.body.appendChild(ta); ta.focus(); ta.select();
+        document.execCommand('copy'); document.body.removeChild(ta);
+        btn.textContent = '✓ Skopiowano!'; btn.classList.add('success');
+        copied.add(id); updateProgress(); setTimeout(resetBtn, 2500);
+      } catch { btn.textContent='⚠ Błąd'; btn.classList.add('error'); setTimeout(resetBtn,3500); }
+      return;
+    }
+
+    navigator.clipboard.writeText(tekst)
+      .then(() => { btn.textContent='✓ Skopiowano!'; btn.classList.add('success'); copied.add(id); updateProgress(); setTimeout(resetBtn,2500); })
+      .catch(() => { btn.textContent='⚠ Błąd kopiowania'; btn.classList.add('error'); setTimeout(resetBtn,3000); });
+  }
+
+  function setActive(el) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  const sections = document.querySelectorAll('.chapter');
+  const navItems = document.querySelectorAll('.nav-item');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        navItems.forEach(n => n.classList.toggle('active', n.getAttribute('href')==='#'+id));
+      }
+    });
+  }, { rootMargin: '-40% 0px -50% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>
